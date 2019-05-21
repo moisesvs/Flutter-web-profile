@@ -5,50 +5,162 @@ import 'dart:convert';
 import 'dart:async';
 
 import 'package:flutter_web/material.dart';
+import 'package:flutter_web/rendering.dart';
 import 'package:http/http.dart' as http;
 
-void main() => runApp(MyApp(post: fetchPost()));
+void main() => runApp(MyApp(profile: fetchProfile()));
 
 class MyApp extends StatelessWidget {
-  final Future<Post> post;
+  final Future<Profile> profile;
 
-  MyApp({this.post});
+  MyApp({this.profile});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Profile Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-       primarySwatch: Colors.blue,
-      ),
-      home: FutureBuilder<Post>(
-            future: post,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                return MyHomePage(title: 'Profile View ' + snapshot.data.name);
-              } else if (snapshot.hasError) {
-                return Text("${snapshot.error}");
-              }
+    return MaterialApp (
+        home: FutureBuilder<Profile>(
+              future: profile,
+              builder: (context, snapshot) {
+                Widget body;
+                if (snapshot.hasData) {
+                  body = new BodyHome(profile: snapshot.data);
+                } else if (snapshot.hasError) {
+                  body = Text("${snapshot.error}");
+                } else {
+                  // By default, show a loading spinner
+                  body = new BodyLoading();
+                }
 
-              // By default, show a loading spinner
-              return MyHomePage(title: 'Profile View');
-            },
-      ),
-      /*MyHomePage(title: 'Flutter Demo Home Page')*/
+                return new Material(
+                              type: MaterialType.transparency,
+                              child: body)
+                            ;
+              },
+        ),
     );
   }
 }
 
+class BodyLoading extends StatelessWidget {
+
+    @override
+    Widget build (BuildContext ctxt) {
+      return Container(
+                  width: 100.0,
+                  child: Center(
+                    child: Align( alignment: Alignment.center, 
+                                  child: Container (
+                                    child: new CircularProgressIndicator()
+                                ) 
+                  )
+                )
+      );
+    }
+
+}
+
+class BodyHome extends StatelessWidget {
+
+    final Profile profile;
+
+    BodyHome({this.profile});
+
+    @override
+    Widget build (BuildContext ctxt) {
+      return Container (
+          decoration: new BoxDecoration(color: Colors.white),
+          width: 100.0,
+          child: Center(
+            child: Align( alignment: Alignment.center, 
+                          child: Container (
+                            child: new ListDisplay(profile: profile)
+                        ) 
+          )
+      )
+      );
+    }
+
+}
+
+class ListDisplay extends StatelessWidget {
+
+    final Profile profile;
+
+    ListDisplay({this.profile});
+
+    @override
+    Widget build (BuildContext ctxt) {
+      return new ListView.builder
+      (
+        shrinkWrap: true,
+        padding: const EdgeInsets.all(20.0),
+        itemCount: this.profile.posts.length,
+        itemBuilder: (BuildContext ctxt, int index) => buildItem(ctxt, index)
+      );
+    }
+
+    Widget buildItem(BuildContext ctxt, int index) {
+      return new Center(child: Text(
+          profile.posts[index].title,
+          style: TextStyle( fontWeight: FontWeight.bold, 
+                            color: Colors.black, 
+                            fontFamily: "SourceSans",
+                            fontSize: 30),
+        )
+      );
+    }
+}
+
+Future<Profile> fetchProfile() async {
+  final response =
+      await http.get('https://moisespersonalpage.firebaseio.com/profile/0.json');
+
+  if (response.statusCode == 200) {
+    // If the call to the server was successful, parse the JSON
+    return Profile.fromJson(json.decode(response.body));
+  } else {
+    // If that call was not successful, throw an error.
+    throw Exception('Failed to load post');
+  }
+}
+
+class PostFeed {
+  final int id;
+  final String title;
+  final String description;
+
+  PostFeed({this.id, this.title, this.description});
+
+  factory PostFeed.fromJson(Map<String, dynamic> jsonfeed) {
+    return PostFeed(
+      id: jsonfeed['id'],
+      title: jsonfeed['title'],
+      description: jsonfeed['description']
+    );
+  }
+}
+
+class Profile {
+  final String name;
+  final String surname;
+  final List<PostFeed> posts;
+
+  Profile({this.name, this.surname, this.posts});
+
+  factory Profile.fromJson(Map<String, dynamic> json) {
+    var list = json['posts'] as List;
+    List<PostFeed> itemsList = list.map((i) => PostFeed.fromJson(i)).toList();
+
+    return Profile(
+      name: json['name'],
+      surname: json['surname'],
+      posts: itemsList
+    );
+  }
+}
+
+/*
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
@@ -65,33 +177,6 @@ class MyHomePage extends StatefulWidget {
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
-}
-
-Future<Post> fetchPost() async {
-  final response =
-      await http.get('https://moisespersonalpage.firebaseio.com/profile/0.json');
-
-  if (response.statusCode == 200) {
-    // If the call to the server was successful, parse the JSON
-    return Post.fromJson(json.decode(response.body));
-  } else {
-    // If that call was not successful, throw an error.
-    throw Exception('Failed to load post');
-  }
-}
-
-class Post {
-  final String name;
-  final String surname;
-
-  Post({this.name, this.surname});
-
-  factory Post.fromJson(Map<String, dynamic> json) {
-    return Post(
-      name: json['name'],
-      surname: json['surname'],
-    );
-  }
 }
 
 class _MyHomePageState extends State<MyHomePage> {
@@ -159,4 +244,4 @@ class _MyHomePageState extends State<MyHomePage> {
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
-}
+}*/

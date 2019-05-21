@@ -2,7 +2,19 @@
     "profile" : [
         {
             "name" : "Moisés",
-            "surname" : "Vázquez Sánchez"
+            "surname" : "Vázquez Sánchez",
+            "posts" : [
+                {
+                    "id" : "0",
+                    "title" : "Mi primer post", 
+                    "description" : "Este es el primer post description de todos"
+                },
+                {
+                    "id" : "1",
+                    "title" : "Segundo post", 
+                    "description" : "Este es mi segundo post description de todos"
+                }
+            ]
         }
     ]
 }

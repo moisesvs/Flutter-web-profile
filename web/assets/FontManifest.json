@@ -1,0 +1,10 @@
+[
+    {
+        "family": "SourceSans",
+        "fonts": [
+            {
+                "asset": "fonts/Source_Sans_Pro/SourceSansPro-SemiBold.ttf"
+            }
+        ]
+    }
+]
